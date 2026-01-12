@@ -1,5 +1,7 @@
 #include "chip8Emulator.hpp"
+#include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <fstream> 
 #include <vector>
@@ -46,7 +48,7 @@ void Chip8::loadROM(const std::string& fileName) {
     }
 }
 
-Chip8::Chip8() {
+Chip8::Chip8() : randGen(std::chrono::system_clock::now().time_since_epoch().count()) {
     // pc starts at 0x200
     pc = START_ADDRESS; 
 
@@ -54,4 +56,18 @@ Chip8::Chip8() {
     for (uint8_t i {}; i < FONTSET_SIZE; i++) {
         memory[FONTSET_START_ADDRESS + i] = fontSet[i]; 
     }
+
+    // initialize RNG
+    randByte = std::uniform_int_distribution<uint8_t>(0, 255U); 
+}
+
+// clear display
+void Chip8::OP_00E0() {
+    std::memset(video.data(), 0, sizeof(video)); 
+}
+
+// return from subroutine
+void Chip8::OP_00EE() {
+    --sp; 
+    pc = stack[sp]; 
 }
